@@ -6,6 +6,8 @@ Abstract:
 This file shows an example of implementing the OperationCondition protocol.
 */
 
+#if !os(tvOS)
+    
 import EventKit
 
 /// A condition for verifying access to the user's calendar.
@@ -79,3 +81,5 @@ class CalendarPermissionOperation: Operation {
     }
     
 }
+
+#endif

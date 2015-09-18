@@ -16,7 +16,9 @@ public struct LocationCondition: OperationCondition {
     */
     public enum Usage {
         case WhenInUse
+        #if !os(tvOS)
         case Always
+        #endif
     }
     
     public static let name = "Location"
@@ -101,15 +103,28 @@ class LocationPermissionOperation: Operation {
             Not only do we need to handle the "Not Determined" case, but we also 
             need to handle the "upgrade" (.WhenInUse -> .Always) case.
         */
-        switch (CLLocationManager.authorizationStatus(), usage) {
+        
+        #if os(tvOS)
+            switch (CLLocationManager.authorizationStatus(), usage) {
+            case (.NotDetermined, _):
+                dispatch_async(dispatch_get_main_queue()) {
+                    self.requestPermission()
+                }
+                
+            default:
+                finish()
+            }
+        #else
+            switch (CLLocationManager.authorizationStatus(), usage) {
             case (.NotDetermined, _), (.AuthorizedWhenInUse, .Always):
                 dispatch_async(dispatch_get_main_queue()) {
                     self.requestPermission()
                 }
-
+                
             default:
                 finish()
-        }
+            }
+        #endif
     }
     
     private func requestPermission() {
@@ -118,15 +133,23 @@ class LocationPermissionOperation: Operation {
 
         let key: String
         
-        switch usage {
+        #if os(tvOS)
+            switch usage {
             case .WhenInUse:
                 key = "NSLocationWhenInUseUsageDescription"
                 manager?.requestWhenInUseAuthorization()
-        
+            }
+        #else
+            switch usage {
+            case .WhenInUse:
+                key = "NSLocationWhenInUseUsageDescription"
+                manager?.requestWhenInUseAuthorization()
+                
             case .Always:
                 key = "NSLocationAlwaysUsageDescription"
                 manager?.requestAlwaysAuthorization()
-        }
+            }
+        #endif
         
         // This is helpful when developing the app.
         assert(NSBundle.mainBundle().objectForInfoDictionaryKey(key) != nil, "Requesting location permission requires the \(key) key in your Info.plist")

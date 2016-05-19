@@ -19,6 +19,8 @@ private enum RemoteRegistrationResult {
 }
 
 /// A condition for verifying that the app has the ability to receive push notifications.
+@available(*, deprecated, message="use Capability(Push(...)) instead")
+    
 public struct RemoteNotificationCondition: OperationCondition {
     public static let name = "RemoteNotification"
     public static let isMutuallyExclusive = false
@@ -99,7 +101,7 @@ class RemoteNotificationPermissionOperation: Operation {
         dispatch_async(dispatch_get_main_queue()) {
             let notificationCenter = NSNotificationCenter.defaultCenter()
             
-            notificationCenter.addObserver(self, selector: "didReceiveResponse:", name: RemoteNotificationName, object: nil)
+            notificationCenter.addObserver(self, selector: #selector(RemoteNotificationPermissionOperation.didReceiveResponse(_:)), name: RemoteNotificationName, object: nil)
             
             self.application.registerForRemoteNotifications()
         }
